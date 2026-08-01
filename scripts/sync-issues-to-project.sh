@@ -62,3 +62,27 @@ for url in $(gh issue list -R "$OWNER/im8-EG056-hr-master-pipeline" --state open
   fi
 done
 echo "project #8: ${added} 件追加"
+
+# --- add-to-project ワークフローの自動配布 ---
+# 即時反映は各リポジトリの .github/workflows/add-to-project.yml（issues: opened イベント）が担う。
+# ここでは未配布のリポジトリ（主に新規作成分）を検知してテンプレートをコミットする。
+# 注意: ワークフローファイルの push には PAT の workflow スコープが必要。不足時は warn を出してスキップ。
+TEMPLATE="$(dirname "$0")/../templates/add-to-project.yml"
+WF_PATH=".github/workflows/add-to-project.yml"
+if [ -f "$TEMPLATE" ]; then
+  b64=$(base64 -w0 "$TEMPLATE")
+  deployed=0
+  for repo in $(gh repo list "$OWNER" --limit 200 --json name,isArchived --jq '.[] | select(.isArchived|not) | .name'); do
+    if ! gh api "/repos/$OWNER/$repo/contents/$WF_PATH" --silent >/dev/null 2>&1; then
+      if gh api -X PUT "/repos/$OWNER/$repo/contents/$WF_PATH" \
+        -f message="ci: Issue オープン時に org Project「All Issues」へ即時追加するワークフローを追加" \
+        -f content="$b64" >/dev/null 2>&1; then
+        echo "deploy: $repo に $WF_PATH を配布"
+        deployed=$((deployed + 1))
+      else
+        echo "warn: $repo への配布に失敗（PAT の workflow スコープ不足の可能性）"
+      fi
+    fi
+  done
+  echo "workflow 配布: ${deployed} リポジトリ"
+fi
