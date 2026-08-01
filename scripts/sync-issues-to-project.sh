@@ -86,3 +86,27 @@ if [ -f "$TEMPLATE" ]; then
   done
   echo "workflow 配布: ${deployed} リポジトリ"
 fi
+
+# --- per-repo view の自動作成 ---
+# Open Issue のあるリポジトリごとに、リポジトリ名の view（ボード形式・repo: フィルタ）を #6 に用意する。
+# view の上限は 1 プロジェクト 50 個。45 個に達したら新規作成を止めて warn を出す。
+view_count=$(gh api graphql -f query='query{organization(login:"'"$OWNER"'"){projectV2(number:6){views(first:1){totalCount}}}}' \
+  --jq '.data.organization.projectV2.views.totalCount')
+existing_views=$(gh api graphql -f query='query{organization(login:"'"$OWNER"'"){projectV2(number:6){views(first:50){nodes{name}}}}}' \
+  --jq '.data.organization.projectV2.views.nodes[].name')
+created=0
+for repo in $(gh search issues --owner "$OWNER" --state open --limit 1000 --json repository --jq '.[].repository.name' | sort -u); do
+  grep -qxF "$repo" <<<"$existing_views" && continue
+  if [ "$view_count" -ge 45 ]; then
+    echo "warn: view 数が 45 に達したため $repo の view は作成しない（上限 50。不要な view の整理が必要）"
+    continue
+  fi
+  view_id=$(gh api graphql -f query='mutation{createProjectV2View(input:{projectId:"'"$ALL_PID"'",name:"'"$repo"'",layout:BOARD_LAYOUT}){projectV2View{id}}}' \
+    --jq '.data.createProjectV2View.projectV2View.id') || { echo "warn: $repo の view 作成に失敗"; continue; }
+  gh api graphql -f query='mutation{updateProjectV2View(input:{viewId:"'"$view_id"'",filter:"repo:'"$OWNER"'/'"$repo"'"}){projectV2View{id}}}' >/dev/null \
+    || echo "warn: $repo の view フィルタ設定に失敗"
+  view_count=$((view_count + 1))
+  created=$((created + 1))
+  echo "view: $repo を作成"
+done
+echo "view 作成: ${created} 件"

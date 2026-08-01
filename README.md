@@ -23,12 +23,12 @@ org Project へ Issue を自動集約している。
 | 各リポジトリの `.github/workflows/add-to-project.yml` | Issue の opened/reopened イベントで即時に Project #6 へ追加＋Backlog 設定（全アクティブリポジトリに配布済み。`im8-EG056-hr-master-pipeline` のみ #8 への追加ステップ付き） |
 | `templates/add-to-project.yml` | 上記の配布用テンプレート |
 | `.github/workflows/sync-issues-to-project.yml` | 5分おきに `scripts/sync-issues-to-project.sh` を実行 |
-| `scripts/sync-issues-to-project.sh` | ① `gh search issues` で組織の Open Issue を列挙し未登録分を Project に追加して Backlog 設定 ② Status 未設定の Open アイテムを Backlog に補正 ③ `add-to-project.yml` 未配布のリポジトリ（新規作成分）を検知してテンプレートを自動コミット |
+| `scripts/sync-issues-to-project.sh` | ① `gh search issues` で組織の Open Issue を列挙し未登録分を Project に追加して Backlog 設定 ② Status 未設定の Open アイテムを Backlog に補正 ③ `add-to-project.yml` 未配布のリポジトリ（新規作成分）を検知してテンプレートを自動コミット ④ Open Issue のあるリポジトリの per-repo view（ボード・`repo:` フィルタ）を #6 に自動作成 |
 | Project 組み込みワークフロー | Item closed → Done（Project 側の設定、コード管理外）。「Item added to project」ワークフローは Backlog 運用と競合するため**無効化しておくこと** |
 
 新規リポジトリを作った場合: 次回の cron（最大5分後）でワークフローが自動配布され、以後は即時反映になる。配布までの間の Issue も cron が拾うので取りこぼしはない。
 
-リポジトリ単位で絞り込む view について: GitHub の API には view 作成機能がないため自動追加はできない。代わりに view の **Slice by: Repository** を使うと、新規リポジトリも左サイドバーに自動で並ぶ。
+view 構成: 「All」（全件テーブル）＋ Open Issue のあるリポジトリごとのボード view（`createProjectV2View` / `updateProjectV2View` API で自動作成）。**view の上限は 1 プロジェクト 50 個**のため、45 個に達したら自動作成は止まる（warn がログに出る）。その場合は不要な view を整理するか、Slice by: Repository での絞り込みに切り替える。
 
 ### 必要なシークレット
 
