@@ -2,7 +2,7 @@ name: Sync open issues to org project
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # 15分おき（GitHub側の負荷状況により多少遅延あり）
+    - cron: "*/5 * * * *" # 5分おき（GitHub側の負荷状況により多少遅延あり）
   workflow_dispatch:
 
 permissions: {}
