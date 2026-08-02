@@ -4,12 +4,7 @@ AutoFor 組織の共通設定・組織横断の自動化を置くリポジトリ
 
 ## Issue 集約ボード
 
-org Project へ Issue を自動集約している。
-
-| Project | 対象 |
-|---|---|
-| [All Issues (#6)](https://github.com/orgs/AutoFor/projects/6) | 組織内 **全リポジトリ** の Issue |
-| [EG056-人事データメール配信 (#8)](https://github.com/orgs/AutoFor/projects/8) | `im8-EG056-hr-master-pipeline` の Issue（標準形: 追加のみ。Status は組み込みワークフローが Todo を設定） |
+org Project は [All Issues (#6)](https://github.com/orgs/AutoFor/projects/6) の 1 本のみ。組織内 **全リポジトリ** の Issue をここに自動集約し、リポジトリ単位の絞り込みは per-repo view で行う。
 
 - Open された Issue → 各リポジトリの `add-to-project.yml`（issues: opened イベント）が**即時**で Project #6 に追加し **Status: Backlog** にする
 - Close された Issue → Project 組み込みワークフロー「Item closed」が自動で Status: Done に変更（即時）
@@ -20,7 +15,7 @@ org Project へ Issue を自動集約している。
 
 | 担当 | 内容 |
 |---|---|
-| 各リポジトリの `.github/workflows/add-to-project.yml` | Issue の opened/reopened イベントで即時に Project #6 へ追加＋Backlog 設定（全アクティブリポジトリに配布済み。`im8-EG056-hr-master-pipeline` のみ #8 への追加ステップ付き） |
+| 各リポジトリの `.github/workflows/add-to-project.yml` | Issue の opened/reopened イベントで即時に Project #6 へ追加＋Backlog 設定（全アクティブリポジトリに配布済み） |
 | `templates/add-to-project.yml` | 上記の配布用テンプレート |
 | `.github/workflows/sync-issues-to-project.yml` | 5分おきに `scripts/sync-issues-to-project.sh` を実行 |
 | `scripts/sync-issues-to-project.sh` | ① `gh search issues` で組織の Open Issue を列挙し未登録分を Project に追加して Backlog 設定 ② Status 未設定の Open アイテムを Backlog に補正 ③ `add-to-project.yml` 未配布のリポジトリ（新規作成分）を検知してテンプレートを自動コミット ④ Open Issue のあるリポジトリの per-repo view（ボード・`repo:` フィルタ）を #6 に自動作成 |

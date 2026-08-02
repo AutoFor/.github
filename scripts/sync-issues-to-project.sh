@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
-# Open Issue を org Project に自動追加する（追加した Issue の Status は Backlog）。
+# Open Issue を org Project #6「All Issues」に自動追加する（追加した Issue の Status は Backlog）。
 #
-# 対象プロジェクト:
-#   #6 All Issues — 組織内全リポジトリの Open Issue
-#   #8 EG056-人事データメール配信 — im8-EG056-hr-master-pipeline の Open Issue（標準形: Status は組み込みワークフロー任せ）
-#
-# Close 済みの反映は各 Project の組み込みワークフロー（Item closed → Done）が行うため、
+# Close 済みの反映は Project の組み込みワークフロー（Item closed → Done）が行うため、
 # このスクリプトは「追加と Backlog 設定」だけを担当する（何度実行しても安全）。
 set -euo pipefail
 
@@ -50,18 +46,6 @@ ALL_BACKLOG="7e745b7c"
 gh search issues --owner "$OWNER" --state open --limit 1000 --json url --jq '.[].url' \
   | sync_project 6 "$ALL_PID" "$ALL_FID" "$ALL_BACKLOG"
 backfill_project 6 "$ALL_PID" "$ALL_FID" "$ALL_BACKLOG"
-
-# --- #8 EG056-人事データメール配信: im8-EG056-hr-master-pipeline（追加のみ、Status は標準の組み込みワークフローに任せる） ---
-existing=$(gh project item-list 8 --owner "$OWNER" --limit 1000 --format json --jq '[.items[].content.url // empty] | .[]')
-added=0
-for url in $(gh issue list -R "$OWNER/im8-EG056-hr-master-pipeline" --state open --limit 1000 --json url --jq '.[].url'); do
-  if ! grep -qxF "$url" <<<"$existing"; then
-    echo "add(#8): $url"
-    gh project item-add 8 --owner "$OWNER" --url "$url" >/dev/null
-    added=$((added + 1))
-  fi
-done
-echo "project #8: ${added} 件追加"
 
 # --- add-to-project ワークフローの自動配布 ---
 # 即時反映は各リポジトリの .github/workflows/add-to-project.yml（issues: opened イベント）が担う。
