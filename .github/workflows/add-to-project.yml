@@ -22,5 +22,5 @@ jobs:
           ITEM_ID: ${{ steps.add.outputs.itemId }}
         run: |
           gh api graphql \
-            -f query='mutation($item:ID!){updateProjectV2ItemFieldValue(input:{projectId:"PVT_kwDOD7WBKM4BfC0y",itemId:$item,fieldId:"PVTSSF_lADOD7WBKM4BfC0yzhZYn9s",value:{singleSelectOptionId:"7e745b7c"}}){projectV2Item{id}}}' \
+            -f query='mutation($item:ID!){updateProjectV2ItemFieldValue(input:{projectId:"PVT_kwDOD7WBKM4BfC0y",itemId:$item,fieldId:"PVTSSF_lADOD7WBKM4BfC0yzhZYn9s",value:{singleSelectOptionId:"cd6c0e8b"}}){projectV2Item{id}}}' \
             -f item="$ITEM_ID"
